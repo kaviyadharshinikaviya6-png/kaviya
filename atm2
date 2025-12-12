@@ -1,0 +1,90 @@
+package project1;
+import java.sql.Connection;
+import java.sql.*;
+import java.util.Scanner;
+public class Atmdb{
+    
+    Connection con;
+    Scanner sc = new Scanner(System.in);
+
+   public Atmdb() {
+        con = Dbconnect.getConnection();
+    }
+
+
+    // LOGIN
+    public boolean login(int acc, int pin) {
+        try {
+            PreparedStatement ps = con.prepareStatement(
+                "SELECT * FROM accounts WHERE acc_no=? AND pin=?"
+            );
+            ps.setInt(1, acc);
+            ps.setInt(2, pin);
+
+            ResultSet rs = ps.executeQuery();
+
+            return rs.next();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // CHECK BALANCE
+    public double checkBalance(int acc) {
+        try {
+            PreparedStatement ps = con.prepareStatement(
+                "SELECT balance FROM accounts WHERE acc_no=?"
+            );
+            ps.setInt(1, acc);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) 
+                return rs.getDouble("balance");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // DEPOSIT
+    public void deposit(int acc, double amt) {
+        try {
+            PreparedStatement ps = con.prepareStatement(
+                "UPDATE accounts SET balance = balance + ? WHERE acc_no=?"
+            );
+            ps.setDouble(1, amt);
+            ps.setInt(2, acc);
+
+            ps.executeUpdate();
+            System.out.println("Amount Deposited Successfully!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // WITHDRAW
+    public void withdraw(int acc, double amt) {
+        try {
+            double bal = checkBalance(acc);
+
+            if (bal < amt) {
+                System.out.println("Insufficient Balance!");
+                return;
+            }
+
+            PreparedStatement ps = con.prepareStatement(
+                "UPDATE accounts SET balance = balance - ? WHERE acc_no=?"
+            );
+            ps.setDouble(1, amt);
+            ps.setInt(2, acc);
+
+            ps.executeUpdate();
+            System.out.println("Withdrawal Successful!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
